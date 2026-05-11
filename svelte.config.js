@@ -6,7 +6,7 @@ const config = {
 		// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
 		runes: ({ filename }) => (filename.split(/[/\\]/).includes('node_modules') ? undefined : true),
 		experimental: {
-			remoteFunctions: true
+			async: true
 		}
 	},
 	kit: {
@@ -15,7 +15,7 @@ const config = {
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		adapter: adapter(),
 		experimental: {
-			async: true
+			remoteFunctions: true
 		}
 	}
 };
