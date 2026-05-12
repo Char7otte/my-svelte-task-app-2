@@ -1,8 +1,8 @@
 import { form, query } from '$app/server';
 import { sql } from '$lib/server/db/psql';
+import type { User } from '$lib/types';
 import { error } from '@sveltejs/kit';
-import * as z from 'zod';
-import type { User } from '../../types';
+import { z } from 'zod';
 
 const id = z.string().min(1).toLowerCase().trim();
 
