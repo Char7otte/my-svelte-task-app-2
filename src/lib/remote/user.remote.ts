@@ -82,7 +82,7 @@ export const signIn = form(
 			>`SELECT id, email, username, password_hash AS "passwordHash" 
 			FROM users WHERE email = ${email}`;
 			if (!user) error(404, 'Incorrect credentials.');
-			const isCorrectPassword = comparePasswordHash(
+			const isCorrectPassword = await comparePasswordHash(
 				password,
 				user.passwordHash
 			);
