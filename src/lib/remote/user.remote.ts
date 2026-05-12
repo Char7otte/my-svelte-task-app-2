@@ -1,4 +1,6 @@
 import { form, query } from '$app/server';
+import { createSession } from '$lib/server/auth/authManager';
+import { hashPassword } from '$lib/server/auth/hashUtils';
 import { sql } from '$lib/server/db/psql';
 import type { User } from '$lib/types';
 import { error } from '@sveltejs/kit';
@@ -26,19 +28,39 @@ export const getUser = query(id, async (slug: string) => {
 	}
 });
 
-const user = z.object({
-	email: z.email().toLowerCase().trim(),
-	username: z.string().min(5).toLowerCase().trim(),
-	password: z.string().min(8).trim(),
-	confirmPassword: z.string().min(8).trim()
-});
-
-// export const createUser = form(user, async ({ email, username, password, confirmPassword }) => {
-// 	console.log(email, username, password, confirmPassword);
-// });
-
-export const createUser = form(z.object({ email: z.email() }), async (email) => {
-	console.log('Submitted');
+const user = z
+	.object({
+		email: z.email().toLowerCase().trim(),
+		username: z
+			.string()
+			.min(5, 'Name must be between 5 and 20 characters.')
+			.max(20, 'Name must be between 5 and 20 characters.')
+			.toLowerCase()
+			.trim(),
+		password: z
+			.string()
+			.min(8, 'Password must be at least 8 characters.')
+			.trim(),
+		confirmPassword: z.string().trim()
+	})
+	.refine((obj) => obj.password === obj.confirmPassword, {
+		error: "Passwords don't match",
+		abort: true,
+		path: ['confirmPassword']
+	});
+export const createUser = form(user, async ({ email, username, password }) => {
+	try {
+		const passwordHash = await hashPassword(password);
+		const [user] = await sql<
+			User[]
+		>`INSERT INTO users (email, username, password_hash)
+		VALUES(${email}, ${username}, ${passwordHash}) RETURNING id`;
+		if (!user.id) error(500, 'Failed to create user');
+		createSession(user.id);
+		return user;
+	} catch {
+		error(500, 'Database connection failed');
+	}
 });
 
 // const user = auth;
