@@ -28,15 +28,50 @@ export const getUser = query(id, async (slug: string) => {
 	}
 });
 
+export const checkUserExistsByEmail = query(
+	z.email(),
+	async (email: string) => {
+		try {
+			const [result] =
+				await sql`SELECT EXISTS(SELECT 1 FROM users WHERE email = ${email}) AS exists`;
+			return !result.exists;
+		} catch {
+			error(500, 'Database connection failed');
+		}
+	}
+);
+
+export const checkUserExistsByUsername = query(
+	z.string(),
+	async (username: string) => {
+		try {
+			const [result] = await sql`
+				SELECT EXISTS(SELECT 1 FROM users 
+				WHERE LOWER(username) = LOWER(${username})) AS exists`;
+			return !result.exists;
+		} catch {
+			error(500, 'Database connection failed');
+		}
+	}
+);
+
 const user = z
 	.object({
-		email: z.email().toLowerCase().trim(),
+		email: z
+			.email()
+			.toLowerCase()
+			.trim()
+			.refine(async (email) => await checkUserExistsByEmail(email), {
+				error: 'Email is already in use.'
+			}),
 		username: z
 			.string()
-			.min(5, 'Name must be between 5 and 20 characters.')
-			.max(20, 'Name must be between 5 and 20 characters.')
-			.toLowerCase()
-			.trim(),
+			.min(5, 'Username must be between 5 and 20 characters.')
+			.max(20, 'Username must be between 5 and 20 characters.')
+			.trim()
+			.refine(async (username) => await checkUserExistsByUsername(username), {
+				error: 'Username is already taken.'
+			}),
 		password: z
 			.string()
 			.min(8, 'Password must be at least 8 characters.')
@@ -48,6 +83,7 @@ const user = z
 		abort: true,
 		path: ['confirmPassword']
 	});
+
 export const createUser = form(user, async ({ email, username, password }) => {
 	try {
 		const passwordHash = await hashPassword(password);
