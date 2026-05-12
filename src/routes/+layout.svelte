@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import favicon from '$lib/assets/favicon.ico';
+	import { logout } from '$lib/remote/user.remote.js';
 	import './layout.css';
 
 	let { children, data } = $props();
-
-	function onclick() {
-		console.log('Log out clicked');
-	}
 </script>
 
 <svelte:head>
@@ -20,7 +17,10 @@
 	<a href={resolve('/user')}>User</a>
 	{#if data.user}
 		<div class="flex flex-1 justify-end">
-			<button {onclick}>Log out</button>
+			<form {...logout}>
+				<input {...logout.fields.sessionID.as('hidden', data.session.id)} />
+				<button>Log out</button>
+			</form>
 		</div>
 	{/if}
 </nav>
