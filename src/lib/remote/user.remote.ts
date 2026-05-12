@@ -59,12 +59,16 @@ export const signUp = form(
 							throw invalid(issue.email('Email already in use.'));
 						case 'users_username_key':
 							throw invalid(issue.username('Username already taken.'));
+						default:
+							throw new Error(
+								`${psqlError.constraint_name} constraint not handled`,
+								{ cause: e }
+							);
 					}
 				}
-				console.error('UNHANDLED DATABASE ERROR');
+				throw new Error('Unhandled psqlError', { cause: e });
 			}
-			console.error(e);
-			error(500, 'Database connection failed');
+			throw new Error('Unhandled error', { cause: e });
 		}
 		redirect(303, '/');
 	}
