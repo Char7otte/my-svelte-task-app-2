@@ -5,6 +5,7 @@ import {
 	DB_SERVER,
 	DB_USERNAME
 } from '$env/static/private';
+import type { PostgresError } from 'postgres';
 import postgres from 'postgres';
 
 export const sql = postgres({
@@ -14,3 +15,7 @@ export const sql = postgres({
 	username: DB_USERNAME,
 	password: DB_PASSWORD
 });
+
+export function isPostgresError(error: unknown): boolean {
+	return (error as PostgresError).code != undefined;
+}
