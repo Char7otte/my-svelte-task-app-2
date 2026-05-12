@@ -5,7 +5,7 @@
 	const { email, username, password, confirmPassword } = signUp.fields;
 </script>
 
-<form {...signUp} class="m-10 space-y-1" onchange={() => signUp.validate()}>
+<form {...signUp} class="space-y-1" onchange={() => signUp.validate()}>
 	<label class="block"
 		>Email: <br />
 		<input {...email.as('text')} class="border-2 p-1" />

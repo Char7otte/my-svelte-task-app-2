@@ -25,4 +25,6 @@
 	{/if}
 </nav>
 
-{@render children()}
+<div class="m-10">
+	{@render children()}
+</div>

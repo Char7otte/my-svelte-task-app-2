@@ -3,5 +3,5 @@
 </script>
 
 {#each issues as i, index (index)}
-	<span class="text-xs text-red-600">{i.message}</span>
+	<span class="text-sm text-red-600">{i.message}</span>
 {/each}
