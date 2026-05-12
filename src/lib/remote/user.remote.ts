@@ -42,11 +42,10 @@ export const signUp = form(
 			const [user] = await sql<
 				User[]
 			>`INSERT INTO users (email, username, password_hash)
-			VALUES(${data.email}, ${data.username}, ${passwordHash}) 
-			ON CONFLICT(email, username) DO NOTHING 
+			VALUES(${data.email}, ${data.username}, ${passwordHash})
+			ON CONFLICT(email, username) DO NOTHING
 			RETURNING id`;
-			if (!user.id) error(500, 'Failed to create user');
-			await createTokenCookie(user.id);
+			await createTokenCookie(user.id!);
 		} catch (e) {
 			if (isPostgresError(e)) {
 				const psqlError = e as PostgresError;
