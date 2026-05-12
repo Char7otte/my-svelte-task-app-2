@@ -1,9 +1,10 @@
-import { form, query } from '$app/server';
+import { form, getRequestEvent, query } from '$app/server';
 import { createSession } from '$lib/server/auth/authManager';
 import { hashPassword } from '$lib/server/auth/hashUtils';
-import { sql } from '$lib/server/db/psql';
+import { isPostgresError, sql } from '$lib/server/db/psql';
 import type { User } from '$lib/types';
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
+import type { PostgresError } from 'postgres';
 import { z } from 'zod';
 
 const id = z.string().min(1).toLowerCase().trim();
@@ -92,22 +93,17 @@ export const createUser = form(user, async ({ email, username, password }) => {
 		>`INSERT INTO users (email, username, password_hash)
 		VALUES(${email}, ${username}, ${passwordHash}) RETURNING id`;
 		if (!user.id) error(500, 'Failed to create user');
-		createSession(user.id);
-		return user;
-	} catch {
+		const session = await createSession(user.id);
+		const { cookies } = getRequestEvent();
+		cookies.set('token', session.token, { path: '/' });
+	} catch (e) {
+		if (isPostgresError(e)) {
+			const psqlError = e as PostgresError;
+			console.error(psqlError.code, psqlError.detail, psqlError.table_name);
+			error(403, 'Duplicate credentials');
+		}
+		console.error(e);
 		error(500, 'Database connection failed');
 	}
+	redirect(303, '/');
 });
-
-// const user = auth;
-// if (!user) error(404, 'Unauthorized');\
-// const passwordHash = await hashPassword(password);
-// try {
-// 	const [newUser] = await sql<User[]>`INSERT INTO users (email, username, password_hash)
-// 	VALUES(${email}, ${username}, ${passwordHash})
-// 	RETURNING *`;
-// 	// return newUser;
-// 	redirect(303, '/');
-// } catch {
-// 	error(500, 'Database connection failed');
-// }
