@@ -29,11 +29,18 @@ export async function createSession(userID: string): Promise<SessionWithToken> {
 		token
 	};
 
-	await postSession(session.id, session.secretHash, session.createdAt, session.userID);
+	await postSession(
+		session.id,
+		session.secretHash,
+		session.createdAt,
+		session.userID
+	);
 	return session;
 }
 
-export async function validateSessionToken(token: string): Promise<Session | null> {
+export async function validateSessionToken(
+	token: string
+): Promise<Session | null> {
 	const tokenParts = token.split('.');
 	if (tokenParts.length !== 2) {
 		return null;
@@ -65,7 +72,10 @@ export async function getSession(sessionID: string): Promise<Session | null> {
 	const session: Session = { ...result };
 
 	// Check expiration
-	if (now.getTime() - session.createdAt.getTime() >= sessionExpiresInSeconds * 1000) {
+	if (
+		now.getTime() - session.createdAt.getTime() >=
+		sessionExpiresInSeconds * 1000
+	) {
 		await deleteSessionByID(sessionID);
 		return null;
 	}

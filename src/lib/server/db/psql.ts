@@ -1,4 +1,10 @@
-import { DB_DATABASE, DB_PASSWORD, DB_PORT, DB_SERVER, DB_USERNAME } from '$env/static/private';
+import {
+	DB_DATABASE,
+	DB_PASSWORD,
+	DB_PORT,
+	DB_SERVER,
+	DB_USERNAME
+} from '$env/static/private';
 import postgres from 'postgres';
 
 export const sql = postgres({
