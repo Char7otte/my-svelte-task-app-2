@@ -1,13 +1,13 @@
 import { form, getRequestEvent, query } from '$app/server';
 import { createSession } from '$lib/server/auth/authManager';
-import { hashPassword } from '$lib/server/auth/hashUtils';
+import { comparePasswordHash, hashPassword } from '$lib/server/auth/hashUtils';
 import { isPostgresError, sql } from '$lib/server/db/psql';
-import type { User } from '$lib/types';
+import { checkUserExistsByEmail } from '$lib/server/db/users';
+import type { Session, User } from '$lib/types';
 import { error, redirect } from '@sveltejs/kit';
 import type { PostgresError } from 'postgres';
-import { z } from 'zod';
-
-const id = z.string().min(1).toLowerCase().trim();
+import * as z from 'zod';
+import { confirmPassword, email, id, password, username } from './userSchema';
 
 export const getUsers = query(async () => {
 	try {
@@ -29,81 +29,94 @@ export const getUser = query(id, async (slug: string) => {
 	}
 });
 
-export const checkUserExistsByEmail = query(
-	z.email(),
-	async (email: string) => {
+export const signUp = form(
+	z
+		.object({ email, username, password, confirmPassword })
+		.refine(async (obj) => await checkUserExistsByEmail(obj.email), {
+			error: 'Email already in use.',
+			abort: true,
+			path: ['email']
+		})
+		.refine((obj) => obj.password === obj.confirmPassword, {
+			error: "Passwords don't match.",
+			abort: true,
+			path: ['confirmPassword']
+		}),
+	async ({
+		email,
+		username,
+		password
+	}: {
+		email: string;
+		username: string;
+		password: string;
+	}) => {
 		try {
-			const [result] =
-				await sql`SELECT EXISTS(SELECT 1 FROM users WHERE email = ${email}) AS exists`;
-			return !result.exists;
-		} catch {
-			error(500, 'Database connection failed');
-		}
-	}
-);
-
-export const checkUserExistsByUsername = query(
-	z.string(),
-	async (username: string) => {
-		try {
-			const [result] = await sql`
-				SELECT EXISTS(SELECT 1 FROM users 
-				WHERE LOWER(username) = LOWER(${username})) AS exists`;
-			return !result.exists;
-		} catch {
-			error(500, 'Database connection failed');
-		}
-	}
-);
-
-const user = z
-	.object({
-		email: z
-			.email()
-			.toLowerCase()
-			.trim()
-			.refine(async (email) => await checkUserExistsByEmail(email), {
-				error: 'Email is already in use.'
-			}),
-		username: z
-			.string()
-			.min(5, 'Username must be between 5 and 20 characters.')
-			.max(20, 'Username must be between 5 and 20 characters.')
-			.trim()
-			.refine(async (username) => await checkUserExistsByUsername(username), {
-				error: 'Username is already taken.'
-			}),
-		password: z
-			.string()
-			.min(8, 'Password must be at least 8 characters.')
-			.trim(),
-		confirmPassword: z.string().trim()
-	})
-	.refine((obj) => obj.password === obj.confirmPassword, {
-		error: "Passwords don't match",
-		abort: true,
-		path: ['confirmPassword']
-	});
-
-export const createUser = form(user, async ({ email, username, password }) => {
-	try {
-		const passwordHash = await hashPassword(password);
-		const [user] = await sql<
-			User[]
-		>`INSERT INTO users (email, username, password_hash)
+			const passwordHash = await hashPassword(password);
+			const [user] = await sql<
+				User[]
+			>`INSERT INTO users (email, username, password_hash)
 		VALUES(${email}, ${username}, ${passwordHash}) RETURNING id`;
-		if (!user.id) error(500, 'Failed to create user');
-		const session = await createSession(user.id);
-		const { cookies } = getRequestEvent();
-		cookies.set('token', session.token, { path: '/' });
-	} catch (e) {
-		if (isPostgresError(e)) {
-			const psqlError = e as PostgresError;
-			console.error(psqlError.code, psqlError.detail, psqlError.table_name);
-			error(403, 'Duplicate credentials');
+			if (!user.id) error(500, 'Failed to create user');
+			const session = await createSession(user.id);
+			const { cookies } = getRequestEvent();
+			cookies.set('token', session.token, { path: '/' });
+		} catch (e) {
+			if (isPostgresError(e)) {
+				const psqlError = e as PostgresError;
+				console.error(psqlError.code, psqlError.detail, psqlError.table_name);
+				error(403, 'Duplicate credentials');
+			}
+			console.error(e);
+			error(500, 'Database connection failed');
 		}
-		console.error(e);
-		error(500, 'Database connection failed');
+		redirect(303, '/');
 	}
-	redirect(303, '/');
-});
+);
+
+export const signIn = form(
+	z.object({ email, password }),
+	async ({ email, password }: { email: string; password: string }) => {
+		try {
+			const [user] = await sql<
+				User[]
+			>`SELECT id, email, username, password_hash AS "passwordHash" 
+			FROM users WHERE email = ${email}`;
+			if (!user) error(404, 'Incorrect credentials.');
+			const isCorrectPassword = comparePasswordHash(
+				password,
+				user.passwordHash
+			);
+			if (!isCorrectPassword) error(404, 'Incorrect credentials.');
+			const session = await createSession(user.id!);
+			const { cookies } = getRequestEvent();
+			cookies.set('token', session.token, { path: '/' });
+		} catch (e) {
+			console.error(e);
+			error(500, 'Database connection failed');
+		}
+	}
+);
+
+export const logout = form(
+	z.object({ sessionID: z.string() }),
+	async ({ sessionID }: { sessionID: string }) => {
+		try {
+			const { locals } = getRequestEvent();
+			console.log(locals.session);
+			const [deletedUser] = await sql<
+				Session[]
+			>`DELETE FROM sessions WHERE id = ${sessionID} RETURNING user_id`;
+			if (!deletedUser) error(404, 'User not found.');
+			return;
+		} catch (e) {
+			if (isPostgresError(e)) {
+				const psqlError = e as PostgresError;
+				console.error(psqlError.code, psqlError.detail, psqlError.table_name);
+				error(500, 'Something went wrong. Please try again.');
+			}
+			console.error(e);
+			error(500, 'Database connection failed');
+		}
+	}
+);
