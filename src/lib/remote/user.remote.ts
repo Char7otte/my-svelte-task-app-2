@@ -44,9 +44,7 @@ export const signUp = form(
 			>`INSERT INTO users (email, username, password_hash)
 		VALUES(${data.email}, ${data.username}, ${passwordHash}) RETURNING id`;
 			if (!user.id) error(500, 'Failed to create user');
-			const session = await createSession(user.id);
-			const { cookies } = getRequestEvent();
-			cookies.set('token', session.token, { path: '/' });
+			await createTokenCookie(user.id);
 		} catch (e) {
 			if (isPostgresError(e)) {
 				const psqlError = e as PostgresError;
@@ -84,9 +82,7 @@ export const signIn = form(
 				user.passwordHash
 			);
 			if (!isCorrectPassword) error(404, 'Incorrect credentials.');
-			const session = await createSession(user.id!);
-			const { cookies } = getRequestEvent();
-			cookies.set('token', session.token, { path: '/' });
+			await createTokenCookie(user.id!);
 		} catch (e) {
 			console.error(e);
 			error(500, 'Database connection failed');
@@ -118,3 +114,8 @@ export const logout = form(
 		}
 	}
 );
+async function createTokenCookie(userID: string) {
+	const session = await createSession(userID);
+	const { cookies } = getRequestEvent();
+	cookies.set('token', session.token, { path: '/' });
+}
