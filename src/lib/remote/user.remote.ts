@@ -3,7 +3,7 @@ import { createSession } from '$lib/server/auth/authManager';
 import { comparePasswordHash, hashPassword } from '$lib/server/auth/hashUtils';
 import { isPostgresError, sql } from '$lib/server/db/psql';
 import type { Session, User } from '$lib/types';
-import { error, invalid, redirect } from '@sveltejs/kit';
+import { error, invalid, isHttpError, redirect } from '@sveltejs/kit';
 import type { PostgresError } from 'postgres';
 import * as z from 'zod';
 import { confirmPassword, email, id, password, username } from './userSchema';
@@ -89,6 +89,7 @@ export const signIn = form(
 			if (!isCorrectPassword) error(404, 'Incorrect credentials.');
 			await createTokenCookie(user.id!);
 		} catch (e) {
+			if (isHttpError(e)) throw e;
 			console.error(e);
 			error(500, 'Database connection failed');
 		}
