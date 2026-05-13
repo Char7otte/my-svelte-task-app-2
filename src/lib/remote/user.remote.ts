@@ -73,6 +73,7 @@ export const signIn = form(
 		} catch (e) {
 			handleQueryErrors(e);
 		}
+		redirect(303, '/');
 	}
 );
 
