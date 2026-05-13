@@ -5,6 +5,7 @@
 	import './layout.css';
 
 	let { children, data } = $props();
+	$inspect(data);
 </script>
 
 <svelte:head>
