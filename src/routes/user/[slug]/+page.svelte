@@ -1,16 +1,17 @@
 <script lang="ts">
+	import Input from "$lib/Input.svelte";
+
 	const { data } = $props();
 </script>
 
-<h1 class="text-2xl">{data.user.username}</h1>
-<h2>Edit profile</h2>
-<form>
-	<label for="">
-		Username:
-		<input type="text" />
-	</label>
-	<label for="">
-		Original Password:
-		<input type="password" />
-	</label>
-</form>
+<h1 class="text-2xl">{data.selectedUser.username}</h1>
+
+{#if data.isUser}
+	<form>
+	<Input label="Username" type="email" field={} />
+	<Input label="Current Password" type="password" field={} />
+	<Input label="New Password" type="password" field={} />
+	<Input label="Confirm New Password" type="password" field={} />
+		<button type="button">Edit</button>
+	</form>
+{/if}
