@@ -1,5 +1,6 @@
 export function load({ locals }) {
 	return {
-		session: locals.session
+		session: locals.session,
+		user: locals.user
 	};
 }

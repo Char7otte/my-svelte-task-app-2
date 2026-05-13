@@ -1,3 +1,4 @@
+import { getUser } from '$lib/remote/user.remote';
 import { validateSessionToken } from '$lib/server/auth/authManager';
 
 export async function handle({ event, resolve }) {
@@ -10,6 +11,7 @@ export async function handle({ event, resolve }) {
 				createdAt: session.createdAt,
 				userID: session.userID
 			};
+			event.locals.user = await getUser(session.userID);
 		}
 	}
 
