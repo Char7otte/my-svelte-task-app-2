@@ -3,13 +3,14 @@ import bcrypt from 'bcrypt';
 const saltRounds = 10;
 
 export async function hashPassword(password: string): Promise<string> {
-	const passwordHash = await bcrypt.hash(password, saltRounds);
-	return passwordHash;
+	return await bcrypt.hash(password, saltRounds);
 }
 
-export async function comparePasswordHash(password: string, hash: string): Promise<boolean> {
-	const isVerified = await bcrypt.compare(password, hash);
-	return isVerified;
+export async function comparePasswordHash(
+	password: string,
+	hash: string
+): Promise<boolean> {
+	return await bcrypt.compare(password, hash);
 }
 
 export function generateSecureRandomString(): string {

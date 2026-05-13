@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import favicon from '$lib/assets/favicon.ico';
+	import { logout } from '$lib/remote/user.remote.js';
 	import './layout.css';
 
-	let { children } = $props();
+	let { children, data } = $props();
 </script>
 
 <svelte:head>
@@ -10,4 +13,24 @@
 	<title>webi wabo 2</title>
 </svelte:head>
 
-{@render children()}
+<nav class="mb-2 flex space-x-5 bg-gray-200 px-4 py-2 text-lg">
+	<a href={resolve('/')}>Home</a>
+	<a href={resolve('/task')}>Task</a>
+	<div class="flex-1">
+		{#if data.user}
+			<button
+				onclick={async () => {
+					await logout(data.session.id);
+					invalidateAll();
+				}}
+				class="float-right">Logout</button
+			>
+		{:else}
+			<a href={resolve('/user')} class="float-right">Login</a>
+		{/if}
+	</div>
+</nav>
+
+<div class="m-10">
+	{@render children()}
+</div>

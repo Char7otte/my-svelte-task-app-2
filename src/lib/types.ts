@@ -20,11 +20,18 @@ export type User = {
 	passwordHash: string;
 };
 
-export type Session = {
+export type SessionClient = {
 	id: string;
-	secretHash: Uint8Array;
 	createdAt: Date;
 	userID: string;
+};
+
+export type Session = SessionClient & {
+	//"what are you doing mein fuhrer?"
+	// "i am making Uint8Arrays in javascript...
+	// I will call them ArrayBuffer & ArrayBufferLikes"
+	//seriously though what is this...
+	secretHash: Uint8Array<ArrayBuffer>;
 };
 
 export type SessionWithToken = Session & {
