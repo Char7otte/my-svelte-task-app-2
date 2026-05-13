@@ -18,6 +18,7 @@
 	<a href={resolve('/task')}>Task</a>
 	<div class="flex-1">
 		{#if data.user}
+			<a href={resolve('/user/[slug]', { slug: data.user.id })}>Account</a>
 			<button
 				onclick={async () => {
 					await logout(data.session.id);
