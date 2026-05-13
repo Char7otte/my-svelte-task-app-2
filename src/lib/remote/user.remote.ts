@@ -1,32 +1,11 @@
-import { form, getRequestEvent, query } from '$app/server';
+import { form, getRequestEvent } from '$app/server';
 import { createSession } from '$lib/server/auth/authManager';
 import { comparePasswordHash, hashPassword } from '$lib/server/auth/hashUtils';
-import { isPostgresError, sql } from '$lib/server/db/psql';
+import { handleQueryErrors, sql } from '$lib/server/db/psql';
 import type { Session, User } from '$lib/types';
-import { error, invalid, isHttpError, redirect } from '@sveltejs/kit';
-import type { PostgresError } from 'postgres';
+import { error, invalid, redirect } from '@sveltejs/kit';
 import * as z from 'zod';
-import { confirmPassword, email, id, password, username } from './userSchema';
-
-export const getUsers = query(async () => {
-	try {
-		const users = await sql<User[]>`SELECT * FROM users`;
-		if (!users) error(404, 'No users found');
-		return users;
-	} catch {
-		error(500, 'Database connection failed');
-	}
-});
-
-export const getUser = query(id, async (slug: string) => {
-	try {
-		const [user] = await sql<User[]>`SELECT * FROM users WHERE id = ${slug}`;
-		if (!user) error(404, 'No user found');
-		return user;
-	} catch {
-		error(500, 'Database connection failed');
-	}
-});
+import { confirmPassword, email, password, username } from './userSchema';
 
 export const signUp = form(
 	z
@@ -43,15 +22,10 @@ export const signUp = form(
 				User[]
 			>`INSERT INTO users (email, username, password_hash)
 			VALUES(${data.email}, ${data.username}, ${passwordHash})
-			ON CONFLICT(email, username) DO NOTHING
 			RETURNING id`;
 			await createTokenCookie(user.id!);
 		} catch (e) {
-			if (isPostgresError(e)) {
-				const psqlError = e as PostgresError;
-				console.error(
-					`${psqlError.code} in ${psqlError.table_name} | ${psqlError.detail}`
-				);
+			handleQueryErrors(e, (psqlError) => {
 				if (psqlError.code === '23505') {
 					switch (psqlError.constraint_name) {
 						case 'users_email_key':
@@ -65,9 +39,7 @@ export const signUp = form(
 							);
 					}
 				}
-				throw new Error('Unhandled psqlError', { cause: e });
-			}
-			throw new Error('Unhandled error', { cause: e });
+			});
 		}
 		redirect(303, '/');
 	}
@@ -89,9 +61,7 @@ export const signIn = form(
 			if (!isCorrectPassword) error(404, 'Incorrect credentials.');
 			await createTokenCookie(user.id!);
 		} catch (e) {
-			if (isHttpError(e)) throw e;
-			console.error(e);
-			error(500, 'Database connection failed');
+			handleQueryErrors(e);
 		}
 	}
 );
@@ -108,18 +78,11 @@ export const logout = form(
 			if (!deletedUser) error(404, 'User not found.');
 			return;
 		} catch (e) {
-			if (isPostgresError(e)) {
-				const psqlError = e as PostgresError;
-				console.error(
-					`${psqlError.code} in ${psqlError.table_name} | ${psqlError.detail}`
-				);
-				error(500, 'Something went wrong. Please try again.');
-			}
-			console.error(e);
-			error(500, 'Database connection failed');
+			handleQueryErrors(e);
 		}
 	}
 );
+
 async function createTokenCookie(userID: string) {
 	const session = await createSession(userID);
 	const { cookies } = getRequestEvent();
