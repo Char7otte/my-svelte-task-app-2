@@ -1,6 +1,14 @@
-import { redirect } from '@sveltejs/kit';
+import { getUser } from '$lib/remote/user.remote.js';
 
-export function load({ locals, params }) {
-	console.log(locals);
-	if (!locals.user || locals.user.id !== params.slug) redirect(308, '/404');
+export async function load({ params, locals }) {
+	const selectedUser = await getUser(params.slug);
+	if (!selectedUser)
+		throw new Error('Unhandled error in user[slug] selected user');
+
+	const isUser = params.slug === locals.user.id;
+
+	return {
+		isUser,
+		selectedUser
+	};
 }
