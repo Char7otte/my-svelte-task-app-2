@@ -35,6 +35,6 @@ export const handleQueryErrors = (
 	throw new Error('Unhandled error', { cause: e });
 };
 
-function isPostgresError(error: unknown): boolean {
+export function isPostgresError(error: unknown): boolean {
 	return (error as PostgresError).code != undefined;
 }

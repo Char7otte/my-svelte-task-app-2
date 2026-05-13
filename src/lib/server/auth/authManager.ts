@@ -1,14 +1,12 @@
+import { deleteSession, postSession } from '$lib/remote/session.remote';
 import {
 	constantTimeEqual,
 	generateSecureRandomString,
 	hashSecret
 } from '$lib/server/auth/hashUtils';
-import {
-	deleteSessionByID,
-	getSessionByID,
-	postSession
-} from '$lib/server/db/sessions';
+
 import type { Session, SessionWithToken } from '$lib/types';
+import { getSessionByID } from '../db/sessions';
 
 const sessionExpiresInSeconds = 60 * 60 * 24; // 1 day
 
@@ -29,12 +27,7 @@ export async function createSession(userID: string): Promise<SessionWithToken> {
 		token
 	};
 
-	await postSession(
-		sessionWithToken.id,
-		sessionWithToken.secretHash,
-		sessionWithToken.createdAt,
-		sessionWithToken.userID
-	);
+	await postSession(sessionWithToken);
 	return sessionWithToken;
 }
 
@@ -76,7 +69,7 @@ export async function getSession(sessionID: string): Promise<Session | null> {
 		now.getTime() - session.createdAt.getTime() >=
 		sessionExpiresInSeconds * 1000
 	) {
-		await deleteSessionByID(sessionID);
+		await deleteSession(sessionID);
 		return null;
 	}
 
