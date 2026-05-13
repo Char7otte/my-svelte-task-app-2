@@ -15,6 +15,7 @@
 
 <nav class="mb-2 flex space-x-5 bg-gray-200 px-4 py-2 text-lg">
 	<a href={resolve('/')}>Home</a>
+	<a href={resolve('/task')}>Task</a>
 	<div class="flex-1">
 		{#if data.user}
 			<button
