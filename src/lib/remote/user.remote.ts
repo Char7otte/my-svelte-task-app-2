@@ -77,25 +77,22 @@ export const signIn = form(
 	}
 );
 
-export const logout = form(
-	z.object({ sessionID: z.string() }),
-	async ({ sessionID }: { sessionID: string }) => {
-		try {
-			const { locals } = getRequestEvent();
-			console.log(locals.session);
-			const [deletedUser] = await sql<
-				Session[]
-			>`DELETE FROM sessions WHERE id = ${sessionID} RETURNING user_id`;
-			if (!deletedUser) error(404, 'User not found.');
-			return;
-		} catch (e) {
-			handleQueryErrors(e);
-		}
+export const logout = command(id, (sessionID: string) => {
+	try {
+		deleteTokenCookie();
+		deleteSession(sessionID);
+	} catch (e) {
+		handleQueryErrors(e);
 	}
-);
+});
 
 async function createTokenCookie(userID: string) {
 	const session = await createSession(userID);
 	const { cookies } = getRequestEvent();
 	cookies.set('token', session.token, { path: '/' });
+}
+
+async function deleteTokenCookie() {
+	const { cookies } = getRequestEvent();
+	cookies.delete('token', { path: '/' });
 }
