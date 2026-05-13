@@ -1,5 +1,18 @@
 {
 	"files.associations": {
 		"*.css": "tailwindcss"
+	},
+	"files.exclude": {
+		".gitignore": true,
+		".prettierignore": true,
+		".prettierrc": true,
+		".vscode": true,
+		"components.json": true,
+		"eslint.config.js": true,
+		"README.md": true,
+		"static": true,
+		"svelte.config.js": true,
+		"tsconfig.json": true,
+		"vite.config.ts": true
 	}
 }
