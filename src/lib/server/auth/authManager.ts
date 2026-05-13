@@ -21,7 +21,7 @@ export async function createSession(userID: string): Promise<SessionWithToken> {
 
 	const token = id + '.' + secret;
 
-	const session: SessionWithToken = {
+	const sessionWithToken: SessionWithToken = {
 		id,
 		secretHash,
 		createdAt: now,
@@ -30,12 +30,12 @@ export async function createSession(userID: string): Promise<SessionWithToken> {
 	};
 
 	await postSession(
-		session.id,
-		session.secretHash,
-		session.createdAt,
-		session.userID
+		sessionWithToken.id,
+		sessionWithToken.secretHash,
+		sessionWithToken.createdAt,
+		sessionWithToken.userID
 	);
-	return session;
+	return sessionWithToken;
 }
 
 export async function validateSessionToken(
