@@ -2,7 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import favicon from '$lib/assets/favicon.ico';
-	import { logout } from '$lib/remote/user.remote.js';
+	import { logout } from '$lib/remote/auth.remote.js';
 	import './layout.css';
 
 	let { children, data } = $props();

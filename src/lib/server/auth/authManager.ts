@@ -1,4 +1,4 @@
-import { deleteSession, postSession } from '$lib/remote/session.remote';
+import { deleteSession, postSession } from '$lib/remote/auth.remote';
 import {
 	constantTimeEqual,
 	generateSecureRandomString,

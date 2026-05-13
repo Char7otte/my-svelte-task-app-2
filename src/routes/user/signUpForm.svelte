@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Input from '$lib/Input.svelte';
-	import { signUp } from '$lib/remote/user.remote';
+	import { signUp } from '$lib/remote/auth.remote';
 
 	const { email, username, password, confirmPassword } = signUp.fields;
 </script>
