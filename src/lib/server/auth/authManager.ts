@@ -23,7 +23,7 @@ export async function createSession(userID: string): Promise<SessionWithToken> {
 
 	const sessionWithToken: SessionWithToken = {
 		id,
-		secretHash,
+		secretHash: secretHash as Uint8Array<ArrayBuffer>,
 		createdAt: now,
 		userID,
 		token

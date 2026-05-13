@@ -27,7 +27,11 @@ export type SessionClient = {
 };
 
 export type Session = SessionClient & {
-	secretHash: Uint8Array;
+	//"what are you doing mein fuhrer?"
+	// "i am making Uint8Arrays in javascript...
+	// I will call them ArrayBuffer & ArrayBufferLikes"
+	//seriously though what is this...
+	secretHash: Uint8Array<ArrayBuffer>;
 };
 
 export type SessionWithToken = Session & {
