@@ -14,7 +14,11 @@ export const getUser = query(id, async (slug: string) => {
 		if (!user) error(404, 'User not found.');
 		return user;
 	} catch (e) {
-		handleQueryErrors(e);
+		handleQueryErrors(e, (psqlError) => {
+			if (psqlError.code === '22P02') {
+				error(404, 'User not found.');
+			}
+		});
 	}
 });
 
