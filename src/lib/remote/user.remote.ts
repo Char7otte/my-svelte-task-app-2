@@ -1,15 +1,16 @@
-import { form, getRequestEvent, query } from '$app/server';
+import { command, form, getRequestEvent, query } from '$app/server';
 import { createSession } from '$lib/server/auth/authManager';
 import { comparePasswordHash, hashPassword } from '$lib/server/auth/hashUtils';
 import { handleQueryErrors, sql } from '$lib/server/db/psql';
-import type { Session, User } from '$lib/types';
+import type { User } from '$lib/types';
 import { error, invalid, redirect } from '@sveltejs/kit';
 import * as z from 'zod';
-import { confirmPassword, email, id, password, username } from './userSchema';
+import { deleteSession } from './session.remote';
+import { confirmPassword, email, id, password, username } from './zodSchema';
 
 export const getUser = query(id, async (slug: string) => {
 	try {
-		const [user] = await sql`SELECT * FROM users WHERE id = ${slug}`;
+		const [user] = await sql<User[]>`SELECT * FROM users WHERE id = ${slug}`;
 		if (!user) error(404, 'User not found.');
 		return user;
 	} catch (e) {
