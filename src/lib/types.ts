@@ -20,11 +20,14 @@ export type User = {
 	passwordHash: string;
 };
 
-export type Session = {
+export type SessionClient = {
 	id: string;
-	secretHash: Uint8Array;
 	createdAt: Date;
 	userID: string;
+};
+
+export type Session = SessionClient & {
+	secretHash: Uint8Array;
 };
 
 export type SessionWithToken = Session & {
