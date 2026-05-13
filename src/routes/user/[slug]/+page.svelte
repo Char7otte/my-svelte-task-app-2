@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import { logout } from '$lib/remote/user.remote.js';
-
 	const { data } = $props();
 </script>
 
@@ -17,11 +14,3 @@
 		<input type="password" />
 	</label>
 </form>
-
-<button
-	onclick={async () => {
-		await logout(data.session.id);
-		invalidateAll();
-	}}
-	class="float-right">Logout</button
->
