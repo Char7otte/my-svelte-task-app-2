@@ -2,7 +2,7 @@ import { form, query } from '$app/server';
 import { id, username } from '$lib/remote/zodSchema';
 import { handleQueryErrors, sql } from '$lib/server/db/psql';
 import type { User } from '$lib/types';
-import { error } from '@sveltejs/kit';
+import { error, invalid } from '@sveltejs/kit';
 import z from 'zod';
 
 export const getUser = query(id, async (slug: string) => {
@@ -17,13 +17,25 @@ export const getUser = query(id, async (slug: string) => {
 
 export const patchUserUsername = form(
 	z.object({ id, username }),
-	async ({ id, username }) => {
+	async ({ id, username }, issue) => {
 		try {
 			const result =
 				await sql`UPDATE users SET username = ${username} WHERE id=${id}`;
 			if (result.count !== 1) error(404, 'User not found');
 		} catch (e) {
-			handleQueryErrors(e);
+			handleQueryErrors(e, (psqlError) => {
+				if (psqlError.code === '23505') {
+					switch (psqlError.constraint_name) {
+						case 'users_username_key':
+							throw invalid(issue.username('Username already taken.'));
+						default:
+							throw new Error(
+								`${psqlError.constraint_name} constraint not handled`,
+								{ cause: e }
+							);
+					}
+				}
+			});
 		}
 	}
 );
