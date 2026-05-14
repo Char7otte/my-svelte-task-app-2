@@ -1,9 +1,10 @@
 import { form, query } from '$app/server';
-import { id, username } from '$lib/remote/zodSchema';
+import { id, username, password, confirmPassword } from '$lib/remote/zodSchema';
 import { handleQueryErrors, sql } from '$lib/server/db/psql';
 import type { User } from '$lib/types';
 import { error, invalid } from '@sveltejs/kit';
 import z from 'zod';
+import { hashPassword } from '$lib/server/auth/hashUtils';
 
 export const getUser = query(id, async (slug: string) => {
 	try {
@@ -40,38 +41,35 @@ export const patchUserUsername = form(
 	}
 );
 
-// export const patchUser = form(
-// 	z
-// 		.object({
-// 			id,
-// 			username,
-// 			password,
-// 			newPassword: password,
-// 			confirmNewPassword: password
-// 		})
-// 		.refine(async ({ password, newPassword }) => password !== newPassword, {
-// 			error: 'New password cannot be old password',
-// 			path: ['newPassword']
-// 		})
-// 		.refine(
-// 			async ({ newPassword, confirmNewPassword }) =>
-// 				newPassword === confirmNewPassword,
-// 			{
-// 				error: "New passwords don't match",
-// 				path: ['confirmNewPassword']
-// 			}
-// 		),
-// 	async ({ id, username, newPassword }) => {
-// 		try {
-// 			console.log(id, username, newPassword);
-// 			const newPasswordHash = await hashPassword(newPassword);
-
-// 			const result = await sql`UPDATE users SET(username, password_hash)
-// 				VALUES(${username}, ${newPasswordHash})
-// 				WHERE id = ${id}`;
-// 			if (result.count !== 1) error(404, 'User not found.');
-// 		} catch (e) {
-// 			handleQueryErrors(e);
-// 		}
-// 	}
-// );
+export const patchUserPassword = form(
+	z
+		.object({
+			id,
+			password,
+			newPassword: password,
+			confirmNewPassword: confirmPassword
+		})
+		.refine(async ({ password, newPassword }) => password !== newPassword, {
+			error: 'New password cannot be old password',
+			path: ['newPassword']
+		})
+		.refine(
+			async ({ newPassword, confirmNewPassword }) =>
+				newPassword === confirmNewPassword,
+			{
+				error: "New passwords don't match",
+				path: ['confirmNewPassword']
+			}
+		),
+	async ({ id, newPassword }) => {
+		try {
+			const newPasswordHash = await hashPassword(newPassword);
+			const result = await sql`UPDATE users
+			  SET password_hash = ${newPasswordHash}
+				WHERE id = ${id}`;
+			if (result.count !== 1) error(404, 'User not found.');
+		} catch (e) {
+			handleQueryErrors(e);
+		}
+	}
+);
