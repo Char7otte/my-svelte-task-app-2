@@ -1,26 +1,30 @@
 import { form, query } from '$app/server';
 import { id, username } from '$lib/remote/zodSchema';
-import { handleQuery, sql } from '$lib/server/db/psql';
+import { handleQueryErrors, sql } from '$lib/server/db/psql';
 import type { User } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import z from 'zod';
 
 export const getUser = query(id, async (slug: string) => {
-	return handleQuery<User>(async () => {
+	try {
 		const [user] = await sql<User[]>`SELECT * FROM users WHERE id = ${slug}`;
 		if (!user) error(404, 'User not found.');
 		return user;
-	});
+	} catch (e) {
+		handleQueryErrors(e);
+	}
 });
 
 export const patchUserUsername = form(
 	z.object({ id, username }),
 	async ({ id, username }) => {
-		handleQuery(async () => {
+		try {
 			const result =
 				await sql`UPDATE users SET username = ${username} WHERE id=${id}`;
 			if (result.count !== 1) error(404, 'User not found');
-		});
+		} catch (e) {
+			handleQueryErrors(e);
+		}
 	}
 );
 

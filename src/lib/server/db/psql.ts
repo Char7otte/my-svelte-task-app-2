@@ -40,14 +40,3 @@ export const handleQueryErrors = (
 export function isPostgresError(error: unknown): boolean {
 	return (error as PostgresError).code != undefined;
 }
-
-export const handleQuery = async <T>(
-	tryBlock: () => T | Promise<T>,
-	customPsqlHandler?: (psqlError: PostgresError) => void
-) => {
-	try {
-		return await tryBlock();
-	} catch (e) {
-		handleQueryErrors(e, customPsqlHandler);
-	}
-};
