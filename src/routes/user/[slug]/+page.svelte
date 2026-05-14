@@ -2,6 +2,7 @@
 	import Form from '$lib/Form.svelte';
 	import Input from '$lib/Input.svelte';
 	import { patchUserUsername } from '$lib/remote/user.remote';
+	import { invalidateAll } from '$app/navigation';
 
 	const { data } = $props();
 	const { id, username } = patchUserUsername.fields;
@@ -12,7 +13,14 @@
 
 {#if data.isUser}
 	<button>Edit</button>
-	<Form action={patchUserUsername}>
+	<Form
+		oninput={() => patchUserUsername.validate()}
+		action={patchUserUsername}
+		enhanceAfter={() => {
+			isEditing = false;
+			invalidateAll();
+		}}
+	>
 		<input {...id.as('hidden', data.user.id)} />
 		<Input
 			label="Username"
