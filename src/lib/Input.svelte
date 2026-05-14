@@ -14,7 +14,7 @@
 <label class="block"
 	>{label}: <br />
 	<input
-		{...field.as({ type })}
+		{...field.as(type)}
 		class="border-2 p-1"
 		{value}
 		{placeholder}
