@@ -7,16 +7,13 @@
 <form
 	//@ts-expect-error implicitly typing props? IMGOODBROPIZZAMOVIE.png
 	{...action.enhance(async ({ form, submit }) => {
-		try {
-			isLoading = true;
-			if (await submit()) {
-				form.reset();
-			}
-		} catch (e) {
-			throw new Error('Something went wrong in sign up form', { cause: e });
-		} finally {
-			isLoading = false;
+		// No try catch is needed here since
+		// any errors will be handled by the remote form's trycatch.
+		isLoading = true;
+		if (await submit()) {
+			form.reset();
 		}
+		isLoading = false;
 	})}
 >
 	<fieldset {disabled}>
