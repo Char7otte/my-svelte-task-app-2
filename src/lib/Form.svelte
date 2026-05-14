@@ -19,7 +19,7 @@
 		}
 	})}
 >
-	<fieldset {disabled} class="disabled:cursor-not-allowed disabled:opacity-50">
+	<fieldset {disabled}>
 		{@render children()}
 	</fieldset>
 </form>
