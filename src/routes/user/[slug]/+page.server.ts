@@ -5,7 +5,9 @@ export async function load({ params, locals }) {
 	if (!selectedUser)
 		throw new Error('Unhandled error in user[slug] selected user');
 
-	const isUser = params.slug === locals.user.id;
+	let isUser: boolean | undefined = false;
+	if (locals.user)
+		isUser = locals.user.id ? params.slug === locals.user.id : undefined;
 
 	return {
 		isUser,
