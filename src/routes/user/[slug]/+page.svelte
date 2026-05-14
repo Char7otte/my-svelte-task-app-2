@@ -5,7 +5,7 @@
 
 	const { data } = $props();
 	const { id, username } = patchUserUsername.fields;
-	let isEditting: boolean = $state(false);
+	let isEditing: boolean = $state(false);
 </script>
 
 <h1 class="inline text-2xl">{data.selectedUser.username}</h1>
@@ -20,10 +20,10 @@
 			field={username}
 			placeholder={data.user.username}
 			value={data.user.username}
-			disabled={!isEditting}
+			disabled={!isEditing}
 		>
-			{#if !isEditting}
-				<button type="button" onclick={() => (isEditting = true)}>Edit</button>
+			{#if !isEditing}
+				<button type="button" onclick={() => (isEditing = true)}>Edit</button>
 			{:else}
 				<button>Change</button>
 			{/if}</Input
