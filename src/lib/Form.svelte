@@ -1,5 +1,12 @@
 <script lang="ts">
-	let { action, children } = $props();
+	let {
+		action,
+		children,
+		oninput = () => {},
+		onchange = () => {},
+		enhanceBefore = () => {},
+		enhanceAfter = () => {}
+	} = $props();
 	let isLoading: boolean = $state(false);
 	let disabled = $derived(isLoading);
 </script>
@@ -7,14 +14,16 @@
 <form
 	//@ts-expect-error implicitly typing props? IMGOODBROPIZZAMOVIE.png
 	{...action.enhance(async ({ form, submit }) => {
-		// No try catch is needed here since
-		// any errors will be handled by the remote form's trycatch.
+		enhanceBefore();
 		isLoading = true;
 		if (await submit()) {
 			form.reset();
 		}
 		isLoading = false;
+		enhanceAfter();
 	})}
+	{onchange}
+	{oninput}
 >
 	<fieldset {disabled}>
 		{@render children()}
