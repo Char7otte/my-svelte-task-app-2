@@ -1,11 +1,10 @@
 <script lang="ts">
 	import Form from '$lib/Form.svelte';
 	import Input from '$lib/Input.svelte';
-	import { patchUser, patchUserUsername } from '$lib/remote/user.remote';
+	import { patchUserUsername } from '$lib/remote/user.remote';
 
 	const { data } = $props();
-	const { id, username, password, newPassword, confirmNewPassword } =
-		patchUser.fields;
+	const { id, username } = patchUserUsername.fields;
 	let isEditting: boolean = $state(false);
 </script>
 
