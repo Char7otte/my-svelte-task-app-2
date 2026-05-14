@@ -20,6 +20,6 @@
 		{placeholder}
 		{disabled}
 	/>
-	{@render children()}
+	{@render children?.()}
 	<FormIssues issues={field.issues()} />
 </label>
