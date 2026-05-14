@@ -29,6 +29,8 @@ export const handleQueryErrors = (
 
 		if (psqlError.code.startsWith('0800'))
 			error(500, 'Database connection failed');
+		if (psqlError.code === '42601')
+			throw new Error('Syntax error found in query statement');
 		if (customPsqlHandler) customPsqlHandler(psqlError);
 		throw new Error('Unhandled psql error', { cause: e });
 	}
